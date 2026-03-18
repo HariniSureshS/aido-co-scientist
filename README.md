@@ -12,7 +12,10 @@ git clone https://github.com/HariniSureshS/aido-co-scientist.git && cd aido-co-s
 pip install -e .
 
 # 2. (Optional) Set API key — without it, pipeline runs fully deterministic
+#    Option A: environment variable
 export ANTHROPIC_API_KEY=sk-ant-...
+#    Option B: config file
+cp config.yaml.example config.yaml   # then edit with your key
 
 # 3. Run on a dataset
 co-scientist run RNA/translation_efficiency_muscle

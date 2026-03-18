@@ -1,0 +1,5 @@
+# Co-Scientist Configuration
+# Copy this file to config.yaml and fill in your API key.
+# Alternatively, set the ANTHROPIC_API_KEY environment variable or pass --api-key on the CLI.
+
+anthropic_api_key: "sk-ant-..."
