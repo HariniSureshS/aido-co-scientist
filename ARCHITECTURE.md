@@ -1339,7 +1339,7 @@ The reviewer can copy any task output to a new machine, run `pip install -r requ
 |---|---|---|
 | CLI | Typer | Clean, type-safe, minimal boilerplate |
 | Terminal UI | Rich | Live dashboard, tables, panels |
-| LLM | Claude API (Sonnet) | Strong reasoning, native web search |
+| LLM | Claude API (Anthropic) | Strong structured reasoning and consistent schema adherence for multi-agent tool use; 200K context window supports long ReAct scratchpads. Architecture is LLM-agnostic — swapping to OpenAI or Gemini requires changing only `co_scientist/llm/client.py`. |
 | Web search | Claude API web_search tool | No extra key |
 | Paper search | Semantic Scholar API | Free, no key, great bio coverage |
 | ML training | scikit-learn, XGBoost, LightGBM, PyTorch | Covers baselines through advanced + custom architectures |
