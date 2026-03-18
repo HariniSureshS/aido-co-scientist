@@ -8,7 +8,7 @@ A CLI-based multi-agent system for automated machine learning on biological data
 
 ```bash
 # 1. Clone and install
-git clone <repo-url> && cd scientist
+git clone https://github.com/HariniSureshS/aido-co-scientist.git && cd aido-co-scientist
 pip install -e .
 
 # 2. (Optional) Set API key — without it, pipeline runs fully deterministic
@@ -340,7 +340,7 @@ After the cell above finishes, **restart the runtime** (Runtime → Restart runt
 
 ```python
 # Cell 2: Install co-scientist (run AFTER runtime restart)
-!git clone <your-repo-url> /content/scientist
+!git clone https://github.com/HariniSureshS/aido-co-scientist.git /content/scientist
 %cd /content/scientist
 !pip install -e . -q
 
