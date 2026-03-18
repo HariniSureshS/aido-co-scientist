@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large model files
+*.pth
+*.pkl
+*.pt
+*.h5
+*.hdf5
+
+# Outputs (generated at runtime)
+outputs/
+
+# Testing artifacts
+.pytest_cache/
+test-output.xml
+htmlcov/
+.coverage
+
+# Config with secrets
+config.yaml
+
+# Misc
+=4.0.0

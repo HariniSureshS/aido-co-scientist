@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "co-scientist"
+version = "0.1.0"
+description = "AIDO Co-Scientist: CLI-based multi-agent system for automated ML on biological datasets"
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.12.0",
+    "rich>=13.0.0",
+    "pydantic>=2.0.0",
+    "datasets>=2.14.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "anndata>=0.10.0",
+    "huggingface-hub>=0.19.0",
+    "scipy>=1.11.0",
+    "scikit-learn>=1.3.0",
+    "xgboost>=2.0.0",
+    "lightgbm>=4.0.0",
+    "matplotlib>=3.7.0",
+    "seaborn>=0.12.0",
+    "jinja2>=3.1.0",
+    "pyyaml>=6.0",
+    "optuna>=3.4.0",
+    "torch>=2.0.0",
+    "anthropic>=0.39.0",
+]
+
+[project.scripts]
+co-scientist = "co_scientist.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["co_scientist*"]

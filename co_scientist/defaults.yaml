@@ -1,0 +1,623 @@
+# =============================================================================
+# AIDO Co-Scientist — Default Configuration
+# =============================================================================
+# Layered override system:
+#   base (this level) → modality → task_type → dataset-specific
+#
+# To override for a specific dataset, add a key under `datasets:` matching
+# the dataset path (e.g. "RNA/translation_efficiency_muscle").
+#
+# Each tier can have a single model (dict) or multiple models (list of dicts).
+# =============================================================================
+
+# ── Preprocessing ────────────────────────────────────────────────────────────
+preprocessing:
+  scaling: standard          # standard | minmax | none
+  nan_fill: 0.0
+
+  sequence:                  # DNA / RNA
+    kmer_sizes: [3, 4]
+    include_gc_content: true
+    include_nuc_composition: true
+    include_seq_length: true
+
+  expression:                # scRNA-seq / cell expression
+    normalization: log1p     # log1p | none
+    n_hvg: 2000              # number of highly variable genes to keep
+
+  protein:
+    include_aa_composition: true
+    include_physicochemical: true
+    include_seq_length: true
+
+# ── Splitting ────────────────────────────────────────────────────────────────
+splitting:
+  test_size: 0.15            # fraction for test set (random split)
+  val_size: 0.15             # fraction for validation set (random split)
+  stratify_classification: true
+  fallback_val_fraction: 0.2 # carve from train if no val split exists
+
+# ── Models ───────────────────────────────────────────────────────────────────
+# Each tier can be a single model (dict with name/model_type/hyperparameters)
+# or a list of models (list of such dicts).
+models:
+  classification:
+    trivial:
+      name: majority_class
+      model_type: majority_class
+      hyperparameters: {}
+
+    simple:
+      - name: logistic_regression
+        model_type: logistic_regression
+        hyperparameters:
+          max_iter: 1000
+          C: 1.0
+          solver: lbfgs
+      - name: elastic_net_clf
+        model_type: elastic_net_clf
+        hyperparameters:
+          max_iter: 1000
+          C: 1.0
+          l1_ratio: 0.5
+
+    standard:
+      - name: xgboost_default
+        model_type: xgboost
+        hyperparameters:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+      - name: lightgbm_default
+        model_type: lightgbm
+        hyperparameters:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+          num_leaves: 31
+          verbose: -1
+      - name: random_forest
+        model_type: random_forest
+        hyperparameters:
+          n_estimators: 200
+          max_depth: null
+          min_samples_leaf: 2
+      - name: svm_default
+        model_type: svm
+        hyperparameters:
+          kernel: rbf
+          C: 1.0
+          gamma: scale
+      - name: knn_default
+        model_type: knn
+        hyperparameters:
+          n_neighbors: 5
+          weights: uniform
+          metric: minkowski
+
+    advanced:
+      - name: mlp
+        model_type: mlp
+        hyperparameters:
+          hidden_dims: [256, 128]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+      - name: ft_transformer_default
+        model_type: ft_transformer
+        hyperparameters:
+          d_model: 64
+          n_heads: 4
+          n_layers: 3
+          d_ff: 128
+          dropout: 0.2
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+
+    foundation:
+      - name: embed_xgboost
+        model_type: embed_xgboost
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 6
+          learning_rate: 0.1
+      - name: embed_mlp
+        model_type: embed_mlp
+        hyperparameters:
+          hidden_dims: [512, 256]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+      - name: aido_finetune
+        model_type: aido_finetune
+        hyperparameters:
+          unfreeze_layers: 2
+          head_hidden: 256
+          head_dropout: 0.3
+          learning_rate: 0.00002
+          weight_decay: 0.01
+          batch_size: 16
+          max_epochs: 20
+          patience: 5
+          max_length: 1024
+      - name: concat_xgboost
+        model_type: concat_xgboost
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 6
+          learning_rate: 0.1
+      - name: concat_mlp
+        model_type: concat_mlp
+        hyperparameters:
+          hidden_dims: [512, 256]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+
+  regression:
+    trivial:
+      name: mean_predictor
+      model_type: mean_predictor
+      hyperparameters: {}
+
+    simple:
+      - name: ridge_regression
+        model_type: ridge_regression
+        hyperparameters:
+          alpha: 1.0
+      - name: elastic_net_reg
+        model_type: elastic_net_reg
+        hyperparameters:
+          alpha: 0.1
+          l1_ratio: 0.5
+          max_iter: 1000
+
+    standard:
+      - name: xgboost_default
+        model_type: xgboost
+        hyperparameters:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+      - name: lightgbm_default
+        model_type: lightgbm
+        hyperparameters:
+          n_estimators: 100
+          max_depth: 6
+          learning_rate: 0.1
+          num_leaves: 31
+          verbose: -1
+      - name: random_forest
+        model_type: random_forest
+        hyperparameters:
+          n_estimators: 200
+          max_depth: null
+          min_samples_leaf: 2
+      - name: svm_default
+        model_type: svm
+        hyperparameters:
+          kernel: rbf
+          C: 1.0
+          gamma: scale
+      - name: knn_default
+        model_type: knn
+        hyperparameters:
+          n_neighbors: 5
+          weights: uniform
+
+    advanced:
+      - name: mlp
+        model_type: mlp
+        hyperparameters:
+          hidden_dims: [256, 128]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+      - name: ft_transformer_default
+        model_type: ft_transformer
+        hyperparameters:
+          d_model: 64
+          n_heads: 4
+          n_layers: 3
+          d_ff: 128
+          dropout: 0.2
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+
+    foundation:
+      - name: embed_xgboost
+        model_type: embed_xgboost
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 6
+          learning_rate: 0.1
+      - name: embed_mlp
+        model_type: embed_mlp
+        hyperparameters:
+          hidden_dims: [512, 256]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+      - name: aido_finetune
+        model_type: aido_finetune
+        hyperparameters:
+          unfreeze_layers: 2
+          head_hidden: 256
+          head_dropout: 0.3
+          learning_rate: 0.00002
+          weight_decay: 0.01
+          batch_size: 16
+          max_epochs: 20
+          patience: 5
+          max_length: 1024
+      - name: concat_xgboost
+        model_type: concat_xgboost
+        hyperparameters:
+          n_estimators: 200
+          max_depth: 6
+          learning_rate: 0.1
+      - name: concat_mlp
+        model_type: concat_mlp
+        hyperparameters:
+          hidden_dims: [512, 256]
+          dropout: 0.3
+          learning_rate: 0.001
+          weight_decay: 0.0001
+          batch_size: 64
+          max_epochs: 50
+          patience: 10
+
+# ── Hyperparameter Search ────────────────────────────────────────────────────
+hp_search:
+  enabled: true
+  n_trials: 30              # number of Optuna trials
+  timeout_seconds: 180      # max wall-clock time for search
+  sampler: tpe              # tpe | random
+
+  search_spaces:
+    xgboost:
+      n_estimators:  { type: int,   low: 50,    high: 500 }
+      max_depth:     { type: int,   low: 3,     high: 10 }
+      learning_rate: { type: float, low: 0.01,  high: 0.3,  log: true }
+      subsample:     { type: float, low: 0.6,   high: 1.0 }
+      colsample_bytree: { type: float, low: 0.5, high: 1.0 }
+      min_child_weight: { type: int, low: 1, high: 10 }
+      reg_alpha:     { type: float, low: 0.0,   high: 1.0 }
+      reg_lambda:    { type: float, low: 0.5,   high: 5.0 }
+
+    lightgbm:
+      n_estimators:  { type: int,   low: 50,    high: 500 }
+      max_depth:     { type: int,   low: 3,     high: 10 }
+      learning_rate: { type: float, low: 0.01,  high: 0.3,  log: true }
+      num_leaves:    { type: int,   low: 15,    high: 127 }
+      subsample:     { type: float, low: 0.6,   high: 1.0 }
+      colsample_bytree: { type: float, low: 0.5, high: 1.0 }
+      reg_alpha:     { type: float, low: 0.0,   high: 1.0 }
+      reg_lambda:    { type: float, low: 0.5,   high: 5.0 }
+      min_child_samples: { type: int, low: 5, high: 50 }
+
+    random_forest:
+      n_estimators:  { type: int,   low: 50,    high: 500 }
+      max_depth:     { type: int,   low: 3,     high: 20 }
+      min_samples_split: { type: int, low: 2, high: 20 }
+      min_samples_leaf:  { type: int, low: 1, high: 10 }
+      max_features:  { type: categorical, choices: ["sqrt", "log2", null] }
+
+    logistic_regression:
+      C:             { type: float, low: 0.001, high: 100.0, log: true }
+      max_iter:      { type: int,   low: 500,   high: 3000 }
+
+    ridge_regression:
+      alpha:         { type: float, low: 0.001, high: 100.0, log: true }
+
+    elastic_net_clf:
+      C:             { type: float, low: 0.001, high: 100.0, log: true }
+      l1_ratio:      { type: float, low: 0.1,   high: 0.9 }
+      max_iter:      { type: int,   low: 500,   high: 3000 }
+
+    elastic_net_reg:
+      alpha:         { type: float, low: 0.001, high: 100.0, log: true }
+      l1_ratio:      { type: float, low: 0.1,   high: 0.9 }
+      max_iter:      { type: int,   low: 500,   high: 3000 }
+
+    mlp:
+      dropout:       { type: float, low: 0.1,   high: 0.5 }
+      learning_rate: { type: float, low: 0.0001, high: 0.01, log: true }
+      weight_decay:  { type: float, low: 0.00001, high: 0.01, log: true }
+      batch_size:    { type: categorical, choices: [32, 64, 128, 256] }
+      n_layers:      { type: int,   low: 1,     high: 3 }
+      hidden_size:   { type: categorical, choices: [64, 128, 256, 512] }
+
+    svm:
+      C:             { type: float, low: 0.01,  high: 100.0, log: true }
+      gamma:         { type: categorical, choices: ["scale", "auto"] }
+      kernel:        { type: categorical, choices: ["rbf", "linear", "poly"] }
+
+    knn:
+      n_neighbors:   { type: int,   low: 3,     high: 25 }
+      weights:       { type: categorical, choices: ["uniform", "distance"] }
+      metric:        { type: categorical, choices: ["minkowski", "euclidean", "manhattan"] }
+
+    ft_transformer:
+      d_model:       { type: categorical, choices: [32, 64, 128] }
+      n_heads:       { type: categorical, choices: [2, 4, 8] }
+      n_layers:      { type: int,   low: 1,     high: 6 }
+      dropout:       { type: float, low: 0.0,   high: 0.5 }
+      learning_rate: { type: float, low: 0.0001, high: 0.01, log: true }
+      weight_decay:  { type: float, low: 0.00001, high: 0.01, log: true }
+
+    aido_finetune:
+      unfreeze_layers: { type: int, low: 1, high: 4 }
+      head_hidden:   { type: categorical, choices: [128, 256, 512] }
+      head_dropout:  { type: float, low: 0.1,   high: 0.5 }
+      learning_rate: { type: float, low: 0.000005, high: 0.0001, log: true }
+      weight_decay:  { type: float, low: 0.001, high: 0.1, log: true }
+      batch_size:    { type: categorical, choices: [8, 16, 32] }
+
+    embed_xgboost:
+      n_estimators:  { type: int,   low: 50,    high: 500 }
+      max_depth:     { type: int,   low: 3,     high: 10 }
+      learning_rate: { type: float, low: 0.01,  high: 0.3,  log: true }
+      subsample:     { type: float, low: 0.6,   high: 1.0 }
+      colsample_bytree: { type: float, low: 0.5, high: 1.0 }
+
+    embed_mlp:
+      dropout:       { type: float, low: 0.1,   high: 0.5 }
+      learning_rate: { type: float, low: 0.0001, high: 0.01, log: true }
+      weight_decay:  { type: float, low: 0.00001, high: 0.01, log: true }
+      batch_size:    { type: categorical, choices: [32, 64, 128, 256] }
+
+    concat_xgboost:
+      n_estimators:  { type: int,   low: 50,    high: 500 }
+      max_depth:     { type: int,   low: 3,     high: 10 }
+      learning_rate: { type: float, low: 0.01,  high: 0.3,  log: true }
+      subsample:     { type: float, low: 0.6,   high: 1.0 }
+      colsample_bytree: { type: float, low: 0.5, high: 1.0 }
+
+    concat_mlp:
+      dropout:       { type: float, low: 0.1,   high: 0.5 }
+      learning_rate: { type: float, low: 0.0001, high: 0.01, log: true }
+      weight_decay:  { type: float, low: 0.00001, high: 0.01, log: true }
+      batch_size:    { type: categorical, choices: [32, 64, 128, 256] }
+
+# ── Evaluation ───────────────────────────────────────────────────────────────
+evaluation:
+  imbalance_threshold_pct: 5  # class with < 5% triggers imbalanced metrics
+
+  metrics:
+    binary_classification:
+      primary: auroc
+      secondary: [accuracy, f1, precision, recall]
+
+    multiclass_balanced:
+      primary: accuracy
+      secondary: [macro_f1, weighted_f1, macro_precision, macro_recall]
+
+    multiclass_imbalanced:
+      primary: macro_f1
+      secondary: [accuracy, weighted_f1, macro_precision, macro_recall]
+
+    regression:
+      primary: spearman
+      secondary: [pearson, mse, rmse, mae, r2]
+
+# ── Modality Overrides ───────────────────────────────────────────────────────
+# These merge on top of the base config when the detected modality matches.
+modality_overrides:
+  rna:
+    models:
+      regression:
+        advanced:
+          - name: mlp
+            model_type: mlp
+            hyperparameters:
+              hidden_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: bio_cnn
+            model_type: bio_cnn
+            hyperparameters:
+              n_filters: 64
+              kernel_sizes: [3, 5, 7, 9]
+              fc_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: ft_transformer_default
+            model_type: ft_transformer
+            hyperparameters:
+              d_model: 64
+              n_heads: 4
+              n_layers: 3
+              d_ff: 128
+              dropout: 0.2
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+      classification:
+        advanced:
+          - name: mlp
+            model_type: mlp
+            hyperparameters:
+              hidden_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: bio_cnn
+            model_type: bio_cnn
+            hyperparameters:
+              n_filters: 64
+              kernel_sizes: [3, 5, 7, 9]
+              fc_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: ft_transformer_default
+            model_type: ft_transformer
+            hyperparameters:
+              d_model: 64
+              n_heads: 4
+              n_layers: 3
+              d_ff: 128
+              dropout: 0.2
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+
+  dna:
+    models:
+      regression:
+        advanced:
+          - name: mlp
+            model_type: mlp
+            hyperparameters:
+              hidden_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: bio_cnn
+            model_type: bio_cnn
+            hyperparameters:
+              n_filters: 64
+              kernel_sizes: [3, 5, 7, 9]
+              fc_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+      classification:
+        advanced:
+          - name: mlp
+            model_type: mlp
+            hyperparameters:
+              hidden_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+          - name: bio_cnn
+            model_type: bio_cnn
+            hyperparameters:
+              n_filters: 64
+              kernel_sizes: [3, 5, 7, 9]
+              fc_dims: [256, 128]
+              dropout: 0.3
+              learning_rate: 0.001
+              weight_decay: 0.0001
+              batch_size: 64
+              max_epochs: 50
+              patience: 10
+
+  cell_expression:
+    models:
+      classification:
+        standard:
+          - name: xgboost_default
+            model_type: xgboost
+            hyperparameters:
+              n_estimators: 200
+              max_depth: 8
+              learning_rate: 0.1
+          - name: lightgbm_default
+            model_type: lightgbm
+            hyperparameters:
+              n_estimators: 200
+              max_depth: 8
+              learning_rate: 0.1
+              num_leaves: 63
+              verbose: -1
+          - name: random_forest
+            model_type: random_forest
+            hyperparameters:
+              n_estimators: 300
+              max_depth: null
+              min_samples_leaf: 2
+
+  protein:
+    models:
+      classification:
+        simple:
+          - name: logistic_regression
+            model_type: logistic_regression
+            hyperparameters:
+              max_iter: 2000
+              C: 1.0
+              solver: lbfgs
+          - name: elastic_net_clf
+            model_type: elastic_net_clf
+            hyperparameters:
+              max_iter: 2000
+              C: 1.0
+              l1_ratio: 0.5
+      regression:
+        simple:
+          - name: ridge_regression
+            model_type: ridge_regression
+            hyperparameters:
+              alpha: 0.5
+          - name: elastic_net_reg
+            model_type: elastic_net_reg
+            hyperparameters:
+              alpha: 0.5
+              l1_ratio: 0.5
+              max_iter: 1000
+
+# ── Foundation Models (GPU-gated) ────────────────────────────────────────────
+foundation_models:
+  enabled: auto        # auto = use if GPU available, true = require, false = skip
+  models:
+    rna: "aido_rna_1b600m"
+    dna: "aido_dna_300m"
+    protein: "aido_protein_16b"
+    cell_expression: "aido_cell_100m"
+  batch_size: 8        # batch size for embedding extraction (conservative for T4 16GB)
+  max_length: 512      # max sequence length for tokenization
+
+# ── Dataset-Specific Overrides ───────────────────────────────────────────────
+# Keys must match the dataset_path exactly (e.g. "RNA/translation_efficiency_muscle").
+dataset_overrides: {}

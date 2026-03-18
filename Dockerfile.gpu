@@ -1,0 +1,36 @@
+# GPU Dockerfile — enables AIDO foundation model embeddings + fine-tuning
+#
+# Build: docker build -f Dockerfile.gpu -t co-scientist-gpu .
+# Run:   docker run --gpus all -e ANTHROPIC_API_KEY=sk-ant-... co-scientist-gpu run RNA/translation_efficiency_muscle
+
+FROM pytorch/pytorch:2.2.0-cuda12.1-cudnn8-runtime
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    gfortran \
+    libhdf5-dev \
+    pkg-config \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy project files
+COPY . .
+
+# Install AIDO foundation model dependencies first (requires numpy<2)
+RUN pip install --no-cache-dir modelgenerator && \
+    pip install --no-cache-dir git+https://github.com/genbio-ai/openfold.git@c4aa2fd0d920c06d3fd80b177284a22573528442 && \
+    pip install --no-cache-dir -e .
+
+# Anthropic API key (set at runtime via -e flag)
+ENV ANTHROPIC_API_KEY=""
+# Prevent OpenMP conflicts
+ENV OMP_NUM_THREADS=1
+ENV KMP_DUPLICATE_LIB_OK=TRUE
+ENV TOKENIZERS_PARALLELISM=false
+
+ENTRYPOINT ["co-scientist"]
+CMD ["--help"]
